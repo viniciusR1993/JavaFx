@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+//Código extraido do material udemy
 public class Main extends Application {
 	@Override
 	public void start(Stage stage) {
