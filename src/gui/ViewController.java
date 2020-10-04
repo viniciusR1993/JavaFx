@@ -5,14 +5,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import gui.util.Alerts;
+import gui.util.Constraints;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.util.Callback;
 import model.entities.Person;
 
@@ -21,21 +25,76 @@ public class ViewController implements Initializable {
 	@FXML
 	private ComboBox<Person> comboBoxPerson;
 	@FXML
-	private Button btAll;
-	
-	private ObservableList<Person> obsList;
-	
+	private Button btApply;
 	@FXML
-	public void onBtAllAction() {
-		for(Person person : comboBoxPerson.getItems()) {	//Percorre todos os item da comboBox
-			System.out.println(person);
-		}
-	}
-	
+	private TextField txtId;
+	@FXML
+	private TextField txtName;
+	@FXML
+	private TextField txtEmail;
+
+	private ObservableList<Person> obsList;
+
 	@FXML
 	public void onComboBoxPersonAction() {
-		Person person = comboBoxPerson.getSelectionModel().getSelectedItem();	//Pega o item que foi selecionado no comboBox
-		System.out.println(person);
+		try {
+			Person person = comboBoxPerson.getSelectionModel().getSelectedItem(); // Pega o item que foi selecionado no comboBox
+			if(person!=null) {
+				txtId.setPromptText(String.format(person.getId().toString()));
+				txtName.setPromptText(person.getName());
+				txtEmail.setPromptText(person.getEmail());
+			}
+		}catch(RuntimeException e) {
+			// Chama o alert (uma janela extra) //o null
+			// deixa o cabeçalho sem aparecer, mas pode ser colocad uma String
+			Alerts.showAlert("ERROR!", null, e.getMessage(), AlertType.ERROR);	//Chama um alerta
+		}
+	}
+
+	@FXML
+	public void onBtApplyAction() {
+		if(comboBoxPerson.getSelectionModel().getSelectedItem() == null) {
+			Alerts.showAlert("ERROR!", null, "Nenhum Person selecionado", AlertType.ERROR);	//Chama um alerta
+		}else {
+			try {
+				Person person = comboBoxPerson.getSelectionModel().getSelectedItem();	//atribui a person o item selecionado
+				
+				//Removendo da lista o item
+				//Para percorrer os objeto na combo box utilize comboBoxPerson.getItems()
+				for(int i = 0; i<obsList.size(); i++) {
+					if(obsList.get(i).getName().equals(person.getName())) {
+						obsList.remove(i);
+					}
+				}
+				
+				//Conferindo onde tem texto e alterando o person
+				if (!txtEmail.getText().equals("")) {
+					person.setEmail(txtEmail.getText());
+				}
+				if (!txtName.getText().equals("")) {
+					person.setName(txtName.getText());
+				}
+				if (!txtId.getText().equals("")) {
+					person.setId(Integer.parseInt(txtId.getText()));
+				}
+				
+				obsList.add(person);	//adiciona um intem a lista
+				
+				//Limpando a tela
+				txtName.setText("");
+				txtName.setPromptText("");
+				txtId.setText("");
+				txtId.setPromptText("");
+				txtEmail.setText("");
+				txtEmail.setPromptText("");
+				
+
+			} catch (RuntimeException e) {
+				// Chama o alert (uma janela extra) //o null
+				// deixa o cabeçalho sem aparecer, mas pode ser colocad uma String
+				Alerts.showAlert("ERROR!", null, e.getMessage(), AlertType.ERROR);	//Chama um alerta
+			}
+		}		
 	}
 
 	@Override
@@ -51,7 +110,8 @@ public class ViewController implements Initializable {
 		// Linca a lista com ObservableList
 		comboBoxPerson.setItems(obsList);
 
-		//Código extraido do material udemy. Serve para mostrar apenas o nome de person na lista
+		// Código extraido do material udemy. 
+		//Serve para mostrar apenas o nome de person na lista
 		Callback<ListView<Person>, ListCell<Person>> factory = lv -> new ListCell<Person>() {
 			@Override
 			protected void updateItem(Person item, boolean empty) {
@@ -61,34 +121,11 @@ public class ViewController implements Initializable {
 		};
 		comboBoxPerson.setCellFactory(factory);
 		comboBoxPerson.setButtonCell(factory.call(null));
-	}
 
-	/*
-	 * @FXML private TextField txtNumber1;
-	 * 
-	 * @FXML private TextField txtNumber2;
-	 * 
-	 * @FXML private Button btSum;
-	 * 
-	 * @FXML private Label labelResult;
-	 * 
-	 * @FXML public void onBtSumAction(){ try { Locale.setDefault(Locale.US); double
-	 * number1 = Double.parseDouble(txtNumber1.getText()); //Pega o que está escrito
-	 * no txtNumber1. Precisa do parse devido o retorno ser String double number2 =
-	 * Double.parseDouble(txtNumber2.getText()); double sum = number1 + number2;
-	 * 
-	 * labelResult.setText(String.format("%.2f", sum)); //Seta o que está na label
-	 * }catch(NumberFormatException e) { //Chama o alert (uma janela extra) //o null
-	 * deixa o cabeçalho sem aparecer, mas pode ser colocad uma String
-	 * Alerts.showAlert("ERROR!", null, e.getMessage(), AlertType.ERROR); } }
-	 * 
-	 * //Aqui você coloca o que você quer que seja feito antes de ser iniciado a
-	 * aplicação
-	 * 
-	 * @Override public void initialize(URL url, ResourceBundle rb) {
-	 * Constraints.setTextFieldDouble(txtNumber1); //Faz com que o txtNumber1 recebe
-	 * apenas numbero double. Constraints.setTextFieldDouble(txtNumber2);
-	 * Constraints.setTextFieldMaxLength(txtNumber1, 12);//Coloca valor máximo para
-	 * a caixa }
-	 */
+
+		Constraints.setTextFieldInteger(txtId); // Permite que apenas integer seja colocado no campo TxtId (o codigo do constraints foi retirado da udemy)
+		Constraints.setTextFieldMaxLength(txtId, 7); // Permite que apenas seja colocado 7 caracter no campo txtId (o codigo do constraints foi retirado da udemy)
+		Constraints.setTextFieldMaxLength(txtName, 50);
+		Constraints.setTextFieldMaxLength(txtEmail, 50);
+	}
 }
